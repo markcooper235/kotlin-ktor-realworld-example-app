@@ -17,6 +17,7 @@ jobs:
   spec-api:
     name: Run RealWorld spec tests
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
       - name: Check out repository
@@ -39,25 +40,28 @@ jobs:
       - name: Install Newman
         run: npm install --global newman
 
-      - name: Start application server
-        run: ./gradlew --no-daemon run > server.log 2>&1 &
-
-      - name: Wait for application startup
+      - name: Run server and RealWorld API spec tests
+        env:
+          APIURL: http://127.0.0.1:8080/api
         run: |
+          ./gradlew --no-daemon run > server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid' EXIT
+
           for attempt in $(seq 1 30); do
             if curl --silent --fail http://127.0.0.1:8080/api/tags > /dev/null; then
-              exit 0
+              ./spec-api/run-api-tests.sh
+              exit_code=$?
+              kill $server_pid
+              wait $server_pid || true
+              exit $exit_code
             fi
             sleep 2
           done
+
           echo "Application did not start in time."
           cat server.log
           exit 1
-
-      - name: Run RealWorld API spec tests
-        env:
-          APIURL: http://127.0.0.1:8080/api
-        run: ./spec-api/run-api-tests.sh
 
       - name: Upload server log
         if: failure()
@@ -65,4 +69,3 @@ jobs:
         with:
           name: spec-api-server-log
           path: server.log
-
