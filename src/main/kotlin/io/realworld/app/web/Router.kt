@@ -1,6 +1,7 @@
 package io.realworld.app.web
 
 import io.ktor.auth.authenticate
+import io.ktor.routing.Route
 import io.ktor.routing.Routing
 import io.ktor.routing.delete
 import io.ktor.routing.get
@@ -13,7 +14,7 @@ import io.realworld.app.web.controllers.ProfileController
 import io.realworld.app.web.controllers.TagController
 import io.realworld.app.web.controllers.UserController
 
-fun Routing.users(userController: UserController) {
+fun Route.users(userController: UserController) {
     route("users") {
         post { userController.register(this.context) }
         post("login") { userController.login(this.context) }
@@ -26,10 +27,11 @@ fun Routing.users(userController: UserController) {
     }
 }
 
-fun Routing.profiles(profileController: ProfileController) {
+fun Route.profiles(profileController: ProfileController) {
     route("profiles/{username}") {
         authenticate(optional = true) {
             get { profileController.get(this.context) }
+            get("stats") { profileController.stats(this.context) }
         }
         authenticate {
             route("follow") {
@@ -40,7 +42,7 @@ fun Routing.profiles(profileController: ProfileController) {
     }
 }
 
-fun Routing.articles(articleController: ArticleController, commentController: CommentController) {
+fun Route.articles(articleController: ArticleController, commentController: CommentController) {
     route("articles") {
         authenticate {
             get("feed") { articleController.feed(this.context) }
@@ -68,7 +70,7 @@ fun Routing.articles(articleController: ArticleController, commentController: Co
     }
 }
 
-fun Routing.tags(tagController: TagController) {
+fun Route.tags(tagController: TagController) {
     route("tags") {
         authenticate(optional = true) {
             get { tagController.get(this.context) }

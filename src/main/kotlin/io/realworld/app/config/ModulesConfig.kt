@@ -1,7 +1,9 @@
 package io.realworld.app.config
 
+import io.realworld.app.domain.repository.ActivityRepository
 import io.realworld.app.domain.repository.TagRepository
 import io.realworld.app.domain.repository.UserRepository
+import io.realworld.app.domain.service.ProfileService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
 import io.realworld.app.utils.JwtProvider
@@ -25,7 +27,9 @@ object ModulesConfig {
         bind() from singleton { ArticleController() }
     }
     private val profileModule = Kodein.Module("PROFILE") {
-        bind() from singleton { ProfileController() }
+        bind() from singleton { ProfileController(instance()) }
+        bind() from singleton { ProfileService(instance(), instance()) }
+        bind() from singleton { ActivityRepository() }
     }
     private val commentModule = Kodein.Module("COMMENT") {
         bind() from singleton { CommentController() }
