@@ -185,6 +185,42 @@ If a request fails any validations, expect a 422 and errors in the following for
 
 404 for Not found requests, when a resource can't be found to fulfill the request
 
+## Project-specific extension endpoints
+
+The following endpoint is implemented by this branch as an extension to the standard RealWorld spec.
+
+### Article Search
+
+`GET /api/articles/search?q=<term>`
+
+Returns the standard article list format:
+
+```JSON
+{
+  "articles": [
+    {
+      "slug": "search-result",
+      "title": "Search Result",
+      "description": "Matched article",
+      "body": "The body also participates in the search.",
+      "tagList": ["search"],
+      "createdAt": "2026-06-29T00:00:00.000Z",
+      "updatedAt": "2026-06-29T00:00:00.000Z",
+      "favorited": false,
+      "favoritesCount": 0,
+      "author": {
+        "username": "jake",
+        "bio": null,
+        "image": null,
+        "following": false
+      }
+    }
+  ],
+  "articlesCount": 1
+}
+```
+
+Authentication is optional. `limit` and `offset` query params are also supported.
 
 ## Endpoints:
 

@@ -69,6 +69,19 @@ Execute tests and start the server:
 
 > ./gradlew run & APIURL=http://localhost:8080 ./spec-api/run-api-tests.sh
 
+Coverage and verification:
+
+> ./gradlew clean check jacocoTestReport jacocoTestCoverageVerification
+
+This branch enforces a minimum JaCoCo coverage threshold of `75%` for the implemented application code. The HTML report is generated under `build/reports/jacoco/test/`.
+
+# Project extensions
+
+This branch adds a project-specific article search endpoint alongside the standard RealWorld API:
+
+- `GET /api/articles/search?q=<term>`
+  Searches article titles and bodies and returns the standard article list response format.
+
 # Help
 
 Please fork and PR to improve the code.
