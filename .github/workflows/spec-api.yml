@@ -45,14 +45,19 @@ jobs:
         run: |
           ./gradlew --no-daemon run > server.log 2>&1 &
           server_pid=$!
-          trap 'kill $server_pid' EXIT
+
+          cleanup() {
+            kill "$server_pid" >/dev/null 2>&1 || true
+            wait "$server_pid" >/dev/null 2>&1 || true
+          }
+
+          trap cleanup EXIT
 
           for attempt in $(seq 1 30); do
             if curl --silent --fail http://127.0.0.1:8080/api/tags > /dev/null; then
               ./spec-api/run-api-tests.sh
               exit_code=$?
-              kill $server_pid >/dev/null 2>&1 || true
-              wait $server_pid || true
+              cleanup
               exit $exit_code
             fi
             sleep 2
