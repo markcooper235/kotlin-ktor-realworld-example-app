@@ -4,6 +4,7 @@ import io.realworld.app.domain.Article
 import io.realworld.app.domain.ArticleDTO
 import io.realworld.app.domain.ArticlesDTO
 import io.realworld.app.domain.ProfileDTO
+import io.realworld.app.web.ErrorResponse
 import io.realworld.app.web.rules.AppRule
 import io.realworld.app.web.util.HttpUtil
 import org.apache.http.HttpStatus
@@ -11,11 +12,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
-@Ignore
 class ArticleControllerTest {
     @Rule
     @JvmField
@@ -121,6 +120,74 @@ class ArticleControllerTest {
     }
 
     @Test
+    fun `search articles by title and body`() {
+        appRule.http.createUser("search_articles@valid_email.com", "search_user")
+        appRule.http.post<ArticleDTO>("/api/articles", ArticleDTO(
+            Article(
+                title = "Ktor search title",
+                description = "query endpoint",
+                body = "This body mentions octopus ink.",
+                tagList = listOf("search")
+            )
+        ))
+        appRule.http.post<ArticleDTO>("/api/articles", ArticleDTO(
+            Article(
+                title = "Completely different",
+                description = "query endpoint",
+                body = "This body also mentions octopus patterns.",
+                tagList = listOf("search")
+            )
+        ))
+        appRule.http.post<ArticleDTO>("/api/articles", ArticleDTO(
+            Article(
+                title = "No match here",
+                description = "query endpoint",
+                body = "Nothing related.",
+                tagList = listOf("search")
+            )
+        ))
+
+        val response = appRule.http.get<ArticlesDTO>("/api/articles/search?q=octopus")
+
+        assertEquals(response.status, HttpStatus.SC_OK)
+        assertEquals(2, response.body.articlesCount)
+        assertEquals(2, response.body.articles.size)
+        assertTrue(response.body.articles.all {
+            it.title.orEmpty().contains("octopus", ignoreCase = true) ||
+                it.body.contains("octopus", ignoreCase = true)
+        })
+    }
+
+    @Test
+    fun `search articles paginates results`() {
+        appRule.http.createUser("search_pagination@valid_email.com", "search_pagination")
+        repeat(3) { index ->
+            appRule.http.post<ArticleDTO>("/api/articles", ArticleDTO(
+                Article(
+                    title = "Search pagination $index",
+                    description = "query endpoint",
+                    body = "shared-term article $index",
+                    tagList = listOf("search")
+                )
+            ))
+        }
+
+        val response = appRule.http.get<ArticlesDTO>("/api/articles/search?q=shared-term&limit=1&offset=1")
+
+        assertEquals(response.status, HttpStatus.SC_OK)
+        assertEquals(3, response.body.articlesCount)
+        assertEquals(1, response.body.articles.size)
+    }
+
+    @Test
+    fun `search articles requires query term`() {
+        val response = appRule.http.get<ErrorResponse>("/api/articles/search")
+
+        assertEquals(HttpStatus.SC_UNPROCESSABLE_ENTITY, response.status)
+        assertTrue(response.body.errors["body"]?.contains("Search term is required.") == true)
+    }
+
+    @Test
     fun `create article`() {
         val article = Article(
             title = "Create How to train your dragon",
@@ -146,7 +213,7 @@ class ArticleControllerTest {
 
         http.post<ProfileDTO>("/api/profiles/user_name_test/follow")
 
-        val response = appRule.http.get<ArticlesDTO>("/api/articles/feed")
+        val response = http.get<ArticlesDTO>("/api/articles/feed")
 
         assertEquals(response.status, HttpStatus.SC_OK)
         assertNotNull(response.body.articles)
