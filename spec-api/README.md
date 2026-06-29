@@ -185,6 +185,27 @@ If a request fails any validations, expect a 422 and errors in the following for
 
 404 for Not found requests, when a resource can't be found to fulfill the request
 
+## Project-specific extension endpoints
+
+The following endpoint is implemented by this branch as an extension to the standard RealWorld spec.
+
+### Profile Stats
+
+`GET /api/profiles/:username/stats`
+
+Returns:
+
+```JSON
+{
+  "stats": {
+    "articlesCount": 5,
+    "commentsCount": 12,
+    "favoritesCount": 3
+  }
+}
+```
+
+Authentication is optional. The endpoint returns `404` when the requested profile does not exist.
 
 ## Endpoints:
 
