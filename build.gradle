@@ -26,6 +26,7 @@ buildscript {
 
 apply plugin: 'kotlin'
 apply plugin: 'application'
+apply plugin: 'jacoco'
 mainClassName = "io.realworld.app.AppKt"
 
 repositories {
@@ -49,3 +50,64 @@ dependencies {
     testCompile "junit:junit:$junit_version"
     testCompile "com.mashape.unirest:unirest-java:$unirest_version"
 }
+
+jacoco {
+    toolVersion = "0.8.8"
+}
+
+test {
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                'io/realworld/app/AppKt.class',
+                'io/realworld/app/config/**',
+                'io/realworld/app/domain/Article.class',
+                'io/realworld/app/domain/ArticleDTO.class',
+                'io/realworld/app/domain/ArticlesDTO.class',
+                'io/realworld/app/domain/Comment.class',
+                'io/realworld/app/domain/CommentDTO.class',
+                'io/realworld/app/domain/CommentsDTO.class',
+                'io/realworld/app/domain/Profile.class',
+                'io/realworld/app/domain/ProfileDTO.class',
+                'io/realworld/app/domain/TagDTO.class',
+                'io/realworld/app/domain/User.class',
+                'io/realworld/app/domain/UserDTO.class',
+                'io/realworld/app/domain/exceptions/**',
+                'io/realworld/app/ext/**',
+                'io/realworld/app/web/ErrorResponse.class',
+                'io/realworld/app/web/ErrorExceptionMapping.class'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.75
+            }
+        }
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(jacocoTestReport.classDirectories)
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
