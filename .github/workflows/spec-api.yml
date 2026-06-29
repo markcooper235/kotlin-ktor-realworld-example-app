@@ -1,0 +1,68 @@
+name: RealWorld Spec API Tests
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  spec-api:
+    name: Run RealWorld spec tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Newman
+        run: npm install --global newman
+
+      - name: Start application server
+        run: ./gradlew --no-daemon run > server.log 2>&1 &
+
+      - name: Wait for application startup
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8080/api/tags > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Application did not start in time."
+          cat server.log
+          exit 1
+
+      - name: Run RealWorld API spec tests
+        env:
+          APIURL: http://127.0.0.1:8080/api
+        run: ./spec-api/run-api-tests.sh
+
+      - name: Upload server log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spec-api-server-log
+          path: server.log
+
