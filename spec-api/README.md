@@ -185,6 +185,22 @@ If a request fails any validations, expect a 422 and errors in the following for
 
 404 for Not found requests, when a resource can't be found to fulfill the request
 
+## Project-specific extension endpoints
+
+The following endpoint is implemented by this baseline as an extension to the standard RealWorld spec.
+
+### Popular Article Feed
+
+`GET /api/articles/feed/popular`
+
+Optional query params:
+
+- `limit`
+- `offset`
+
+Authentication is optional. When a valid `Authorization: Token ...` header is present, the returned article list will include the correct `favorited` value for the current user.
+
+Returns [Multiple Articles](#multiple-articles), sorted by `favoritesCount` descending.
 
 ## Endpoints:
 

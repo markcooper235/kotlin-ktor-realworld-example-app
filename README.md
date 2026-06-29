@@ -32,6 +32,7 @@ Tests:
 
   - [junit](https://github.com/junit-team/junit4)
   - [Unirest](https://github.com/Kong/unirest-java) to call endpoints in tests
+  - [JaCoCo](https://www.jacoco.org/jacoco/) for coverage reporting and verification
 
 #### Structure
       + config/
@@ -63,11 +64,24 @@ Build:
 Start the server:
 > ./gradlew run
 
+Run the test suite with coverage verification:
+> ./gradlew clean check jacocoTestReport jacocoTestCoverageVerification
+
+Coverage reports are generated under `build/reports/jacoco/test/`.
+
 In the project have the [spec-api](https://github.com/Rudge/kotlin-ktor-realworld-example-app/tree/master/spec-api) with the README and collections to execute backend tests specs [realworld](https://github.com/gothinkster/realworld).
 
 Execute tests and start the server:
 
 > ./gradlew run & APIURL=http://localhost:8080 ./spec-api/run-api-tests.sh
+
+# Project extensions
+
+This baseline includes a project-specific extension endpoint in addition to the RealWorld API:
+
+- `GET /api/articles/feed/popular`
+  Returns articles sorted by `favoritesCount` descending, with `limit` and `offset` query parameters.
+  Authentication is optional; when a valid token is present, each article's `favorited` flag is computed for the current user.
 
 # Help
 
