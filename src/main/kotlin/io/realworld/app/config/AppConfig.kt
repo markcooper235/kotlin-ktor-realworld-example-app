@@ -34,6 +34,8 @@ import io.realworld.app.web.profiles
 import io.realworld.app.web.tags
 import io.realworld.app.web.users
 import org.kodein.di.generic.instance
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.util.StdDateFormat
 
 const val SERVER_PORT = 8080
 
@@ -69,6 +71,8 @@ fun Application.mainModule() {
     install(CallLogging)
     install(ContentNegotiation) {
         jackson {
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            dateFormat = StdDateFormat().withColonInTimeZone(true)
         }
     }
     install(Authentication) {

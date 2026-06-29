@@ -45,6 +45,11 @@ class UserService(private val jwtProvider: JwtProvider, private val userReposito
         return userRepository.update(email, user)
     }
 
+    fun findByUsername(username: String): User {
+        return userRepository.findByUsername(username)
+            ?: throw NotFoundException("User not found to get.")
+    }
+
     private fun generateJwtToken(user: User): String? {
         return jwtProvider.createJWT(user)
     }

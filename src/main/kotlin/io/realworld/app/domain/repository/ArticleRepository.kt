@@ -71,7 +71,15 @@ class ArticleRepository {
         viewerEmail: String?
     ): Pair<List<Article>, Int> = transaction {
         val viewerId = viewerEmail?.let { email -> findUserByEmail(email).id }
-        val favoritedUserId = favorited?.let { username -> findUserByUsername(username).id }
+        val favoritedUserId = when {
+            favorited.isNullOrBlank() -> null
+            else -> Users.select { Users.username eq favorited }
+                .map { it[Users.id].value }
+                .firstOrNull()
+        }
+        if (!favorited.isNullOrBlank() && favoritedUserId == null) {
+            return@transaction emptyList<Article>() to 0
+        }
         val articles = Articles.selectAll()
             .orderBy(Articles.createdAt, SortOrder.DESC)
             .map { row -> toDomain(row, viewerId) }

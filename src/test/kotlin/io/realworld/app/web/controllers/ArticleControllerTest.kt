@@ -7,6 +7,7 @@ import io.realworld.app.domain.ProfileDTO
 import io.realworld.app.web.ErrorResponse
 import io.realworld.app.web.rules.AppRule
 import io.realworld.app.web.util.HttpUtil
+import com.mashape.unirest.http.Unirest
 import org.apache.http.HttpStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,6 +17,10 @@ import org.junit.Rule
 import org.junit.Test
 
 class ArticleControllerTest {
+    companion object {
+        private val iso8601WithTimezone = Regex("\"(createdAt|updatedAt)\":\"\\d{4}-\\d{2}-\\d{2}T[^\"\\\\]+(?:Z|[+-]\\d{2}:\\d{2})\"")
+    }
+
     @Rule
     @JvmField
     val appRule = AppRule()
@@ -105,6 +110,17 @@ class ArticleControllerTest {
         assertNotNull(response.body.articles.first())
         assertFalse(response.body.articles.first().title.isNullOrBlank())
         assertTrue(response.body.articles.first().tagList.isNotEmpty())
+    }
+
+    @Test
+    fun `get all articles favorited by unknown username returns empty feed`() {
+        appRule.http.createArticle()
+
+        val response = appRule.http.get<ArticlesDTO>("/api/articles?favorited=missing-user")
+
+        assertEquals(HttpStatus.SC_OK, response.status)
+        assertTrue(response.body.articles.isEmpty())
+        assertEquals(0, response.body.articlesCount)
     }
 
     @Test
@@ -202,6 +218,18 @@ class ArticleControllerTest {
         assertEquals(response.body.article?.description, article.description)
         assertEquals(response.body.article?.body, article.body)
         assertEquals(response.body.article?.tagList, article.tagList)
+    }
+
+    @Test
+    fun `article responses use spec compliant timestamps`() {
+        appRule.http.createArticle()
+
+        val response = Unirest.get("${appRule.http.origin}/api/articles")
+            .headers(appRule.http.headers)
+            .asString()
+
+        assertEquals(HttpStatus.SC_OK, response.status)
+        assertTrue(iso8601WithTimezone.containsMatchIn(response.body))
     }
 
     @Test
