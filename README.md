@@ -63,11 +63,13 @@ Build:
 Start the server:
 > ./gradlew run
 
-In the project have the [spec-api](https://github.com/Rudge/kotlin-ktor-realworld-example-app/tree/master/spec-api) with the README and collections to execute backend tests specs [realworld](https://github.com/gothinkster/realworld).
+The repository includes [spec-api](https://github.com/Rudge/kotlin-ktor-realworld-example-app/tree/master/spec-api) with the RealWorld Postman collection and execution notes for validating API-spec compliance.
 
-Execute tests and start the server:
+Execute the RealWorld API spec locally:
 
 > ./gradlew run & APIURL=http://localhost:8080 ./spec-api/run-api-tests.sh
+
+The spec runner now waits for the API to become reachable before launching Newman, so the one-line command above does not need a manual sleep between server startup and test execution.
 
 # CI
 
@@ -82,8 +84,8 @@ GitHub Actions workflows are configured under `.github/workflows/` for:
 Current CI status:
 
 - The Gradle wrapper has been upgraded to `8.10.2`, and the build now runs successfully on JDK `17` and JDK `21`.
-- The bonus RealWorld API spec workflow is configured as non-blocking for now because the `master` baseline is not yet fully RealWorld-spec compliant.
-- In practice, the build/test matrix is expected to function, while the spec workflow is currently best-effort visibility rather than a merge gate.
+- The application now passes the bundled RealWorld API spec collection against the live server, including ISO-8601 timestamp formatting and empty-result handling for `favorited` article filters.
+- The spec workflow is intended to run as a blocking validation alongside the Gradle build and test matrix.
 
 # Help
 

@@ -2,9 +2,9 @@ package io.realworld.app.domain.repository
 
 import io.realworld.app.domain.User
 import io.realworld.app.domain.exceptions.NotFoundException
+import io.realworld.app.utils.Cipher
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import java.util.Base64
 
 internal object Users : LongIdTable() {
     val email: Column<String> = varchar("email", 200).uniqueIndex()
@@ -41,6 +42,8 @@ internal object Follows : Table() {
 }
 
 class UserRepository {
+    private val base64Encoder = Base64.getEncoder()
+
     init {
         transaction {
             SchemaUtils.create(Users)
@@ -84,7 +87,7 @@ class UserRepository {
                     row[username] = user.username
                 }
                 if (user.password != null) {
-                    row[password] = user.password
+                    row[password] = String(base64Encoder.encode(Cipher.encrypt(user.password)))
                 }
                 if (user.bio != null) {
                     row[bio] = user.bio
@@ -99,13 +102,13 @@ class UserRepository {
 
     fun findIsFollowUser(email: String, userIdToFollow: Long): Boolean {
         return transaction {
-            Users.join(Follows, JoinType.INNER,
-                additionalConstraint = {
-                    Follows.user eq Users.id and (Follows.follower eq userIdToFollow)
-                })
-                .select {
-                    Users.email eq email
-                }
+            val user = Users.select { Users.email eq email }
+                .map { it[Users.id].value }
+                .firstOrNull()
+                ?: return@transaction false
+            Follows.select {
+                Follows.user eq userIdToFollow and (Follows.follower eq user)
+            }
                 .count() > 0
         }
     }
@@ -114,9 +117,14 @@ class UserRepository {
         val user = findByEmail(email) ?: throw NotFoundException("Email not found to follow")
         val userToFollow = findByUsername(usernameToFollow) ?: throw NotFoundException("Username not found to follow")
         transaction {
-            Follows.insert { row ->
-                row[Follows.user] = userToFollow.id!!
-                row[follower] = user.id!!
+            val exists = Follows.select {
+                Follows.user eq userToFollow.id!! and (Follows.follower eq user.id!!)
+            }.count() > 0
+            if (!exists) {
+                Follows.insert { row ->
+                    row[Follows.user] = userToFollow.id!!
+                    row[follower] = user.id!!
+                }
             }
         }
         return userToFollow
@@ -128,7 +136,7 @@ class UserRepository {
             ?: throw NotFoundException("Username not found to unfollow")
         transaction {
             Follows.deleteWhere {
-                Follows.user eq user.id!! and (Follows.follower eq userToUnfollow.id!!)
+                Follows.user eq userToUnfollow.id!! and (Follows.follower eq user.id!!)
             }
         }
         return userToUnfollow
