@@ -1,24 +1,29 @@
 package io.realworld.app.web.controllers
 
 import io.ktor.application.ApplicationCall
+import io.ktor.auth.authentication
+import io.ktor.response.respond
+import io.realworld.app.domain.ProfileDTO
+import io.realworld.app.domain.User
+import io.realworld.app.domain.service.ProfileService
 
-class ProfileController {
-    //class ProfileController(private val userService: UserService) {
-    fun get(ctx: ApplicationCall) {
-        ctx.parameters["username"]
-//            userService.getProfileByUsername(ctx.attribute("email")!!, usernameFollowing).also { profile ->
-//                ctx.json(ProfileDTO(profile))
+class ProfileController(private val profileService: ProfileService) {
+    private fun ApplicationCall.currentUserEmail(): String? = authentication.principal<User>()?.email
+
+    suspend fun get(ctx: ApplicationCall) {
+        val username = ctx.parameters["username"] ?: throw IllegalArgumentException("Profile username is required.")
+        ctx.respond(ProfileDTO(profileService.getProfile(ctx.currentUserEmail(), username)))
     }
 
-    fun follow(ctx: ApplicationCall) {
-        ctx.parameters["username"]
-//            userService.follow(ctx.attribute("email")!!, usernameToFollow).also { profile ->
-//                ctx.json(ProfileDTO(profile))
+    suspend fun follow(ctx: ApplicationCall) {
+        val email = ctx.currentUserEmail() ?: throw IllegalArgumentException("User not logged.")
+        val username = ctx.parameters["username"] ?: throw IllegalArgumentException("Profile username is required.")
+        ctx.respond(ProfileDTO(profileService.follow(email, username)))
     }
 
-    fun unfollow(ctx: ApplicationCall) {
-        ctx.parameters["username"]
-//            userService.unfollow(ctx.attribute("email")!!, usernameToUnfollow).also { profile ->
-//                ctx.json(ProfileDTO(profile))
+    suspend fun unfollow(ctx: ApplicationCall) {
+        val email = ctx.currentUserEmail() ?: throw IllegalArgumentException("User not logged.")
+        val username = ctx.parameters["username"] ?: throw IllegalArgumentException("Profile username is required.")
+        ctx.respond(ProfileDTO(profileService.unfollow(email, username)))
     }
 }
