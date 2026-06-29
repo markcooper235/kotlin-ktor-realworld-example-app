@@ -69,6 +69,22 @@ Execute tests and start the server:
 
 > ./gradlew run & APIURL=http://localhost:8080 ./spec-api/run-api-tests.sh
 
+# CI
+
+GitHub Actions workflows are configured under `.github/workflows/` for:
+
+- Gradle build and test on pushes and pull requests to `master` and `main`
+- JDK matrix validation for JDK `17` and JDK `21`
+- JUnit test result publishing
+- Gradle dependency caching
+- RealWorld API spec validation through `spec-api/run-api-tests.sh`
+
+Current compatibility note:
+
+- The repository is still pinned to Gradle `6.8.3` in `gradle/wrapper/gradle-wrapper.properties`.
+- The configured workflows match the intended target state, but the JDK `17` and `21` matrix is not expected to run reliably until the Gradle wrapper is upgraded.
+- Per the Gradle compatibility matrix, running Gradle on JDK `17` requires Gradle `7.3+`, and running Gradle on JDK `21` requires Gradle `8.5+`.
+
 # Help
 
 Please fork and PR to improve the code.
