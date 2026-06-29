@@ -192,6 +192,7 @@ The Postman/Newman collection in this directory can also be executed from GitHub
 - The repository workflow starts the server with Gradle and runs `spec-api/run-api-tests.sh`.
 - `APIURL` should point at the application root API URL, for example `http://127.0.0.1:8080/api`.
 - The script depends on `newman`, so the CI job must provide Node.js and install Newman before running the collection.
+- The current repository workflow keeps this job non-blocking because the `master` baseline still has API gaps relative to the full RealWorld spec.
 
 
 ## Endpoints:

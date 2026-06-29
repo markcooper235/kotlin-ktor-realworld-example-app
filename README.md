@@ -79,11 +79,11 @@ GitHub Actions workflows are configured under `.github/workflows/` for:
 - Gradle dependency caching
 - RealWorld API spec validation through `spec-api/run-api-tests.sh`
 
-Current compatibility note:
+Current CI status:
 
-- The repository is still pinned to Gradle `6.8.3` in `gradle/wrapper/gradle-wrapper.properties`.
-- The configured workflows match the intended target state, but the JDK `17` and `21` matrix is not expected to run reliably until the Gradle wrapper is upgraded.
-- Per the Gradle compatibility matrix, running Gradle on JDK `17` requires Gradle `7.3+`, and running Gradle on JDK `21` requires Gradle `8.5+`.
+- The Gradle wrapper has been upgraded to `8.10.2`, and the build now runs successfully on JDK `17` and JDK `21`.
+- The bonus RealWorld API spec workflow is configured as non-blocking for now because the `master` baseline is not yet fully RealWorld-spec compliant.
+- In practice, the build/test matrix is expected to function, while the spec workflow is currently best-effort visibility rather than a merge gate.
 
 # Help
 
