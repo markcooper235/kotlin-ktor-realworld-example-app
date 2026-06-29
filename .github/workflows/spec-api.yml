@@ -17,7 +17,6 @@ jobs:
   spec-api:
     name: Run RealWorld spec tests
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - name: Check out repository

@@ -10,6 +10,14 @@ APIURL=http://localhost:3000/api ./run-api-tests.sh
 
 For more details, see [`run-api-tests.sh`](run-api-tests.sh).
 
+## Repository status
+
+This repository baseline is now aligned with the bundled RealWorld API collection in this directory.
+
+- Run the application on `http://127.0.0.1:8080`.
+- Use `APIURL=http://127.0.0.1:8080/api ./run-api-tests.sh` to validate the live API.
+- The repository CI workflow executes the same collection as a required check.
+
 ## Considerations for your backend with [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 
 If the backend is about to run on a different host/port than the frontend, make sure to handle `OPTIONS` too and return correct `Access-Control-Allow-Origin` and `Access-Control-Allow-Headers` (e.g. `Content-Type`).
@@ -192,7 +200,7 @@ The Postman/Newman collection in this directory can also be executed from GitHub
 - The repository workflow starts the server with Gradle and runs `spec-api/run-api-tests.sh`.
 - `APIURL` should point at the application root API URL, for example `http://127.0.0.1:8080/api`.
 - The script depends on `newman`, so the CI job must provide Node.js and install Newman before running the collection.
-- The current repository workflow keeps this job non-blocking because the `master` baseline still has API gaps relative to the full RealWorld spec.
+- The repository workflow now treats this job as a required validation because the current baseline is expected to pass the bundled collection.
 
 
 ## Endpoints:
