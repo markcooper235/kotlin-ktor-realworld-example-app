@@ -51,7 +51,7 @@ jobs:
             if curl --silent --fail http://127.0.0.1:8080/api/tags > /dev/null; then
               ./spec-api/run-api-tests.sh
               exit_code=$?
-              kill $server_pid
+              kill $server_pid >/dev/null 2>&1 || true
               wait $server_pid || true
               exit $exit_code
             fi
