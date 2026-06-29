@@ -10,12 +10,15 @@ APIURL=http://localhost:3000/api ./run-api-tests.sh
 
 For more details, see [`run-api-tests.sh`](run-api-tests.sh).
 
+`run-api-tests.sh` now waits for the target API to respond before starting Newman, which makes commands like `./gradlew run & APIURL=http://localhost:8080 ./spec-api/run-api-tests.sh` reliable without adding a separate sleep.
+
 ## Repository status
 
 This repository baseline is now aligned with the bundled RealWorld API collection in this directory.
 
 - Run the application on `http://127.0.0.1:8080`.
 - Use `APIURL=http://127.0.0.1:8080/api ./run-api-tests.sh` to validate the live API.
+- If you are running the backend from this repository directly, `APIURL=http://127.0.0.1:8080 ./run-api-tests.sh` also works because the app exposes the RealWorld routes at the root path and under `/api`.
 - The repository CI workflow executes the same collection as a required check.
 
 ## Considerations for your backend with [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)

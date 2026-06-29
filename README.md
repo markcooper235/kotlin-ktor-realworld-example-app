@@ -69,6 +69,8 @@ Execute the RealWorld API spec locally:
 
 > ./gradlew run & APIURL=http://localhost:8080 ./spec-api/run-api-tests.sh
 
+The spec runner now waits for the API to become reachable before launching Newman, so the one-line command above does not need a manual sleep between server startup and test execution.
+
 # CI
 
 GitHub Actions workflows are configured under `.github/workflows/` for:
