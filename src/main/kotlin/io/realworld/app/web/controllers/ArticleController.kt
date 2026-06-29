@@ -1,32 +1,36 @@
 package io.realworld.app.web.controllers
 
 import io.ktor.application.ApplicationCall
+import io.ktor.auth.authentication
 import io.ktor.request.receive
+import io.ktor.response.respond
 import io.realworld.app.domain.ArticleDTO
 import io.realworld.app.domain.ArticlesDTO
+import io.realworld.app.domain.User
+import io.realworld.app.domain.service.ArticleService
 
-class ArticleController {
-//class ArticleController(private val articleService: ArticleService) {
+class ArticleController(private val articleService: ArticleService) {
+    private fun ApplicationCall.currentUserEmail(): String? {
+        return authentication.principal<User>()?.email
+    }
+
+    private fun ApplicationCall.intQueryParam(name: String, defaultValue: Int): Int {
+        val value = request.queryParameters[name] ?: return defaultValue
+        return value.toIntOrNull() ?: throw IllegalArgumentException("$name must be an integer.")
+    }
 
     fun findBy(ctx: ApplicationCall): ArticlesDTO {
-        val tag = ctx.parameters["tag"]
-        val author = ctx.parameters["author"]
-        val favorited = ctx.parameters["favorited"]
-        val limit = ctx.parameters["limit"] ?: "20"
-        val offset = ctx.parameters["offset"] ?: "0"
-//        articleService.findBy(tag, author, favorited, limit.toInt(), offset.toInt()).also { articles ->
-//            ctx.json(ArticlesDTO(articles, articles.size))
-//        }
         return ArticlesDTO(listOf(), 1)
     }
 
     fun feed(ctx: ApplicationCall): ArticlesDTO {
-        val limit = ctx.parameters["limit"] ?: "20"
-        val offset = ctx.parameters["offset"] ?: "0"
-//        articleService.findFeed(ctx.attribute("email"), limit.toInt(), offset.toInt()).also { articles ->
-//            ctx.json(ArticlesDTO(articles, articles.size))
-//        }
         return ArticlesDTO(listOf(), 1)
+    }
+
+    suspend fun popular(ctx: ApplicationCall) {
+        val limit = ctx.intQueryParam("limit", 20)
+        val offset = ctx.intQueryParam("offset", 0)
+        ctx.respond(articleService.findPopular(limit, offset, ctx.currentUserEmail()))
     }
 
     fun get(ctx: ApplicationCall): ArticleDTO {
@@ -37,12 +41,10 @@ class ArticleController {
         return ArticleDTO(null)
     }
 
-    suspend fun create(ctx: ApplicationCall): ArticleDTO {
-        ctx.receive<ArticleDTO>()
-        //            articleService.create(ctx.attribute("email"), article).apply {
-//                ctx.json(ArticleDTO(this))
-//            }
-        return ArticleDTO(null)
+    suspend fun create(ctx: ApplicationCall) {
+        val email = ctx.currentUserEmail() ?: throw IllegalArgumentException("User not logged.")
+        val article = ctx.receive<ArticleDTO>().article ?: throw IllegalArgumentException("Article is invalid.")
+        ctx.respond(ArticleDTO(articleService.create(email, article)))
     }
 
     suspend fun update(ctx: ApplicationCall): ArticleDTO {
@@ -59,19 +61,15 @@ class ArticleController {
         //            articleService.delete(slug)
     }
 
-    fun favorite(ctx: ApplicationCall): ArticleDTO {
-        ctx.parameters["slug"]
-        //            articleService.favorite(ctx.attribute("email"), slug).apply {
-//                ctx.json(ArticleDTO(this))
-//            }
-        return ArticleDTO(null)
+    suspend fun favorite(ctx: ApplicationCall) {
+        val email = ctx.currentUserEmail() ?: throw IllegalArgumentException("User not logged.")
+        val slug = ctx.parameters["slug"] ?: throw IllegalArgumentException("Article slug is required.")
+        ctx.respond(ArticleDTO(articleService.favorite(email, slug)))
     }
 
-    fun unfavorite(ctx: ApplicationCall): ArticleDTO {
-        ctx.parameters["slug"]
-        //            articleService.unfavorite(ctx.attribute("email"), slug).apply {
-//                ctx.json(ArticleDTO(this))
-//            }
-        return ArticleDTO(null)
+    suspend fun unfavorite(ctx: ApplicationCall) {
+        val email = ctx.currentUserEmail() ?: throw IllegalArgumentException("User not logged.")
+        val slug = ctx.parameters["slug"] ?: throw IllegalArgumentException("Article slug is required.")
+        ctx.respond(ArticleDTO(articleService.unfavorite(email, slug)))
     }
 }

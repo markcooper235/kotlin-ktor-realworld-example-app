@@ -10,6 +10,7 @@ import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
 import io.ktor.response.respond
+import io.ktor.routing.route
 import io.ktor.routing.Routing
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.ApplicationEngine
@@ -20,6 +21,8 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.realworld.app.utils.JwtProvider
+import io.realworld.app.domain.exceptions.NotFoundException
+import io.realworld.app.domain.exceptions.UnauthorizedException
 import io.realworld.app.web.ErrorResponse
 import io.realworld.app.web.articles
 import io.realworld.app.web.controllers.ArticleController
@@ -37,7 +40,7 @@ const val SERVER_PORT = 8080
 @KtorExperimentalAPI
 @EngineAPI
 fun setup(isCio: Boolean = true): BaseApplicationEngine {
-    DbConfig.setup("jdbc:h2:mem:DATABASE_TO_UPPER=false;", "sa", "")
+    DbConfig.setup("jdbc:h2:mem:realworld-${System.nanoTime()};DATABASE_TO_UPPER=false;", "sa", "")
     return server(if (isCio) CIO else Netty)
 }
 
@@ -80,8 +83,17 @@ fun Application.mainModule() {
         }
     }
     install(StatusPages) {
-        exception(Exception::class.java) {
-            val errorResponse = ErrorResponse(mapOf("error" to listOf("detail", this.toString())))
+        exception(IllegalArgumentException::class.java) { cause ->
+            context.respond(HttpStatusCode.UnprocessableEntity, ErrorResponse(mapOf("body" to listOf(cause.message))))
+        }
+        exception(UnauthorizedException::class.java) { cause ->
+            context.respond(HttpStatusCode.Unauthorized, ErrorResponse(mapOf("body" to listOf(cause.message))))
+        }
+        exception(NotFoundException::class.java) { cause ->
+            context.respond(HttpStatusCode.NotFound, ErrorResponse(mapOf("body" to listOf(cause.message))))
+        }
+        exception(Exception::class.java) { cause ->
+            val errorResponse = ErrorResponse(mapOf("body" to listOf(cause.message ?: cause.toString())))
             context.respond(
                 HttpStatusCode.InternalServerError, errorResponse
             )
@@ -93,5 +105,11 @@ fun Application.mainModule() {
         profiles(profileController)
         articles(articleController, commentController)
         tags(tagController)
+        route("api") {
+            users(userController)
+            profiles(profileController)
+            articles(articleController, commentController)
+            tags(tagController)
+        }
     }
 }
